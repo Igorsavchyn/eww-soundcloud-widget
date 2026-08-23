@@ -51,6 +51,7 @@ eww open music
 
 
 
+```
 Check MPRIS:
 playerctl -l
 You should see something similar to:
