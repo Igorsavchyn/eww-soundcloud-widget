@@ -1,0 +1,124 @@
+(defpoll track :interval "1s"
+  `playerctl metadata --format '{{title}}' 2>/dev/null || echo 'No track'`)
+
+(defpoll artist :interval "1s"
+  `playerctl metadata --format '{{artist}}' 2>/dev/null || echo 'No artist'`)
+
+(defpoll art :interval "1s"
+  `playerctl metadata --format '{{mpris:artUrl}}' 2>/dev/null | sed 's#^file://##'`)
+
+(defpoll status :interval "500ms"
+  `playerctl status 2>/dev/null || echo 'Stopped'`)
+
+(defpoll time_current :interval "500ms"
+  `playerctl position 2>/dev/null | LC_NUMERIC=C awk '{s=int($1); printf "%d:%02d", s/60, s%60}'`)
+
+(defpoll time_total :interval "1s"
+  `playerctl metadata mpris:length 2>/dev/null | awk '{s=int($1/1000000); printf "%d:%02d", s/60, s%60}'`)
+
+(defpoll progress_percent :interval "250ms"
+  `~/.config/eww/scripts/progress.sh`)
+
+(defvar volume_ui 100)
+
+(defpoll mute_state :interval "200ms"
+  `~/.config/eww/scripts/mute_state.sh`)
+
+(defwidget music []
+  (box
+    :class "music-card"
+    :orientation "vertical"
+    :space-evenly false
+
+    (label
+      :class "track"
+      :text track
+      :limit-width 17
+      :show-truncated true)
+
+    (label
+      :class "artist"
+      :text artist
+      :limit-width 20
+      :show-truncated true)
+
+    (image
+      :class "cover"
+      :path art
+      :image-width 100
+      :image-height 100)
+
+    (box
+      :class "times"
+      :orientation "horizontal"
+      :space-evenly false
+
+      (label
+        :halign "start"
+        :hexpand true
+        :text time_current)
+
+      (label
+        :halign "end"
+        :text time_total))
+
+    (scale
+      :class "progress"
+      :min 0
+      :max 100
+      :value progress_percent
+      :round-digits 1
+      :draw-value false
+      :onchange "~/.config/eww/scripts/seek.sh {}")
+
+    (box
+      :class "controls"
+      :halign "center"
+
+      (button
+        :onclick "playerctl previous"
+        "⏮")
+
+      (button
+        :class "play"
+        :onclick "playerctl play-pause"
+        {status == "Playing" ? "⏸" : "▶"})
+
+      (button
+        :onclick "playerctl next"
+        "⏭"))
+
+    (box
+      :class "volume-row"
+      :orientation "horizontal"
+      :space-evenly false
+
+      (button
+        :class "mute-button"
+        :onclick "~/.config/eww/scripts/mute_toggle.sh"
+
+        (label
+          :class "vol-label"
+          :text mute_state))
+
+      (scale
+        :class "volume"
+        :min 0
+        :max 100
+        :value volume_ui
+        :round-digits 0
+        :draw-value false
+        :onchange "~/.config/eww/scripts/volume_set.sh {}"))))
+
+(defwindow music
+  :monitor 0
+  :geometry (geometry
+    :x "30px"
+    :y "70px"
+    :width "125px"
+    :height "205px"
+    :anchor "top left")
+  :stacking "fg"
+  :windowtype "desktop"
+  :wm-ignore false
+  (music))
