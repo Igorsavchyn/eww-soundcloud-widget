@@ -63,3 +63,8 @@ Progress bar — seek through the track
 Previous / Play-Pause / Next
 Volume slider — system volume
 Speaker icon — mute / unmute
+
+
+## Screenshot
+
+![Eww SoundCloud Music Widget](screenshots/preview.png)
